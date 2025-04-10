@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Row, Col, Select, DatePicker, Button } from 'antd';
-import { DatePicker as MobileDatePicker, Picker } from "antd-mobile";
-import { chartsData, appColumns } from '../mockData';
+import { DatePicker as MobileDatePicker } from "antd-mobile";
+import { chartsData } from '../mockData';
 import './ChartSection.css';
 import dayjs, { Dayjs } from 'dayjs';
 import { getWidth } from '../util';
 import Bar from './Bar';
 import { CalendarOutlined, DownOutlined, SwapRightOutlined } from '@ant-design/icons';
-import { PickerValue, PickerValueExtend } from 'antd-mobile/es/components/picker-view';
+import { GetAppInfosRequest } from '../proto/statistics_pb';
+import { getAppInfos } from '../store/grpc_client';
+import AppPicker from './common/appPicker';
 
 const { RangePicker } = DatePicker;
-const { Option } = Select;
 
 interface PresetItem {
   label: string;
@@ -21,21 +22,59 @@ interface PresetItem {
 const ChartSection: React.FC = () => {
   const now = new Date();
 
-  const [selectedApp, setSelectedApp] = useState<string>('All Apps');
+  const [proofSelectedApp, setProofSelectedApp] = useState<string>('All Apps');
+  const [appSelectedApp, setAppSelectedApp] = useState<string>('All Apps');
+  const [addressSelectedApp, setAddressSelectedApp] = useState<string>('All Apps');
+
   const [dateRange, setDateRange] = useState<[Dayjs, Dayjs] | null>(null);
   const [activePreset, setActivePreset] = useState<string | null>(null);
 
   // for mobile date picker
   const [startVisible, setStartVisible] = useState<boolean>(false);
   const [endVisible, setEndVisible] = useState<boolean>(false);
-  const [appVisible, setAppVisible] = useState<boolean>(false);
   const [startDate, setStartDate] = useState<Date>(now);
   const [endDate, setEndDate] = useState<Date>(now);
-  
-  const [appValue, setAppValue] = useState<(string | null)[]>(['all']);
-  const [appLabel, setAppLabel] = useState<string>("All Apps");
+
+  const [proofAppVisible, setProofAppVisible] = useState<boolean>(false);
+  const [proofSelectedAppValue, setProofSelectedAppValue] = useState<(string | null)[]>(['all']);
+  const [proofSelectedAppLable, setProofSelectedAppLabel] = useState<string>('All Apps');
+
+  const [appsAppVisible, setAppsAppVisible] = useState<boolean>(false);
+  const [appSelectedAppValue, setAppSelectedAppValue] = useState<(string | null)[]>(['all']);
+  const [appSelectedAppLable, setAppSelectedAppLable] = useState<string>('All Apps');
+
+  const [addressAppVisible, setAddressAppVisible] = useState<boolean>(false);
+  const [addressSelectedAppValue, setAddressSelectedAppValue] = useState<(string | null)[]>(['all']);
+  const [addressSelectedAppLable, setAddressSelectedAppLable] = useState<string>('All Apps');
 
   const [windowWidth, setWindowWidth] = useState<number>(getWidth());
+
+  const [appOptions, setAppOptions] = useState<{ label: React.ReactNode; value: string }[]>([]);
+  const [appColumns, setAppColumns] = useState<{ label: React.ReactNode; value: string }[][]>([]);
+
+
+  useEffect(() => {
+    const req = new GetAppInfosRequest();
+    getAppInfos(req).then((res) => {
+      if(res) {
+        const { appsList } = res.toObject();
+        const options = appsList.map(app => ({
+          label: <div style={{ display: 'flex', alignItems: 'center' }}>
+             <img
+              src={app.iconUrl}
+              alt=""
+              style={{ width: 24, height: 24, marginRight: 12 }}
+            />
+            <span>{app.name.toLocaleUpperCase()}</span>
+          </div>,
+          value: app.name, 
+        }));
+        setAppOptions(options);
+        let appColumns = [{ label: 'All Apps', value: 'all' }, ...options];
+        setAppColumns([appColumns]);
+      }
+    })
+  }, []);
 
   const handleStartConfirm = (value: Date) => {
     setStartDate(value);
@@ -43,10 +82,22 @@ const ChartSection: React.FC = () => {
     setTimeout(() => setEndVisible(true), 300);
   };
 
-  const handleAppSelect = (value: any, extend: any) => {
-    setAppLabel(extend.items[0].label);
-    setAppValue(value);
-    setAppVisible(false);
+  const handleMProofAppConfirm = (value: any, label: any) => {
+    setProofSelectedAppLabel(label);
+    setProofSelectedAppValue(value);
+    setProofAppVisible(false);
+  };
+
+  const handleMAppsAppConfirm = (value: any, label: any) => {
+    setAppSelectedAppLable(label);
+    setAppSelectedAppValue(value);
+    setAppsAppVisible(false);
+  };
+
+  const handleMAddressAppConfirm = (value: any, lable: any) => {
+    setAddressSelectedAppLable(lable);
+    setAddressSelectedAppValue(value);
+    setAddressAppVisible(false);
   };
 
   const handleEndConfirm = (value: Date) => {
@@ -65,9 +116,14 @@ const ChartSection: React.FC = () => {
     };
   }, []);
 
-  const handleAppChange = (value: string) => {
-    setSelectedApp(value);
-    console.log('Selected App:', value);
+  const handleProofAppChange = (value: string) => {
+    setProofSelectedApp(value);
+  };
+  const handleAppsAppChange = (value: string) => {
+    setAppSelectedApp(value);
+  };
+  const handleAddressAppChange = (value: string) => {
+    setAddressSelectedApp(value);
   };
 
   const handleDateChange = (dates: any) => {
@@ -134,21 +190,19 @@ const ChartSection: React.FC = () => {
               </div>
               <div className="app-space">
                 <Select 
-                  value={selectedApp}
+                  value={proofSelectedApp}
                   labelInValue
                   defaultValue="All Apps" 
-                  onChange={handleAppChange}
+                  onChange={handleProofAppChange}
                   dropdownStyle={{ backgroundColor: '#22252E', color: '#FFFCE4'}}
                   popupClassName='app-select'
                   options={[
                     { label: 'All Apps', value: 'all' },
-                    { label: 'UNISWAP', value: 'uniswap' },
-                    { label: 'PANCAKE', value: 'pancake' },
+                    ...appOptions
                   ]}
                 />
                 <div className="date-picker-container">
                   <RangePicker 
-                    // open={true}
                     value={dateRange}
                     onChange={handleDateChange}
                     format="MMM DD, YYYY HH"
@@ -159,8 +213,8 @@ const ChartSection: React.FC = () => {
                 </div>
                 <div className="mobile-date-picker-container">
                   <div className="mobile-picker-btn" style={{ marginBottom: "20px" }}>
-                    <div className="mobile-picker-btn-left" onClick={() => {setAppVisible(true)}}>
-                      <div className="start">{appLabel}</div>
+                    <div className="mobile-picker-btn-left" onClick={() => {setProofAppVisible(true)}}>
+                      <div className="start">{proofSelectedAppLable}</div>
                     </div>
                     <div className="mobile-picker-btn-right">
                       <DownOutlined />
@@ -203,19 +257,12 @@ const ChartSection: React.FC = () => {
                     onConfirm={handleEndConfirm}
                     precision="hour"
                   />
-                  <Picker
-                    value={appValue}
-                    columns={appColumns}
-                    visible={appVisible}
+                  <AppPicker
+                    visible={proofAppVisible}
+                    options={appColumns}
+                    onConfirm={handleMProofAppConfirm}
                     onClose={() => {
-                      setAppVisible(false)
-                    }}
-                    confirmText="OK"
-                    cancelText=""
-                    onConfirm={handleAppSelect}
-                    onSelect={(value, extend) => {
-                      console.log('Selected app value:', value);
-                      console.log('Selected app extend:', extend);
+                      setProofAppVisible(false)
                     }}
                   />
                 </div>
@@ -237,16 +284,15 @@ const ChartSection: React.FC = () => {
               </div>
               <div className="app-space">
                 <Select 
-                  value={selectedApp}
+                  value={appSelectedApp}
                   labelInValue={false}
                   defaultValue="All Apps" 
-                  onChange={handleAppChange}
+                  onChange={handleAppsAppChange}
                   dropdownStyle={{ backgroundColor: '#22252E', color: '#FFFCE4'}}
                   popupClassName='app-select'
                   options={[
                     { label: 'All Apps', value: 'all' },
-                    { label: 'UNISWAP', value: 'uniswap' },
-                    { label: 'PANCAKE', value: 'pancake' },
+                    ...appOptions
                   ]}
                 />
                 <div className="date-picker-container">
@@ -257,6 +303,61 @@ const ChartSection: React.FC = () => {
                     showTime={{ format: 'HH'}}
                     popupClassName='brevis-range-picker'
                     renderExtraFooter={() => renderPresetButtons()}
+                  />
+                </div>
+                <div className="mobile-date-picker-container">
+                  <div className="mobile-picker-btn" style={{ marginBottom: "20px" }}>
+                    <div className="mobile-picker-btn-left" onClick={() => {setAppsAppVisible(true)}}>
+                      <div className="start">{appSelectedAppLable}</div>
+                    </div>
+                    <div className="mobile-picker-btn-right">
+                      <DownOutlined />
+                    </div>
+                  </div>
+
+                  <div className="mobile-picker-btn">
+                    <div className="mobile-picker-btn-left">
+                      <div className="start" onClick={() => {setStartVisible(true)}}>{startDate ? dayjs(startDate).format("MMM DD, YYYY HH") : "Start date"}</div>
+                      <SwapRightOutlined />
+                      <div className="end" onClick={() => {setEndVisible(true)}}>{endDate ? dayjs(endDate).format("MMM DD, YYYY HH") : "End date"}</div>
+                    </div>
+                    <div className="mobile-picker-btn-right">
+                      <CalendarOutlined />
+                    </div>
+                  </div>
+                  <MobileDatePicker
+                    title=''
+                    visible={startVisible}
+                    onClose={() => {
+                      setStartVisible(false)
+                    }}
+                    max={now}
+                    defaultValue={now}
+                    confirmText="OK"
+                    cancelText=""
+                    onConfirm={handleStartConfirm}
+                    precision="hour"
+                  />
+                  <MobileDatePicker
+                    title=''
+                    visible={endVisible}
+                    onClose={() => {
+                      setEndVisible(false)
+                    }}
+                    max={now}
+                    defaultValue={now}
+                    confirmText="OK"
+                    cancelText=""
+                    onConfirm={handleEndConfirm}
+                    precision="hour"
+                  />
+                  <AppPicker
+                    visible={appsAppVisible}
+                    options={appColumns}
+                    onConfirm={handleMAppsAppConfirm}
+                    onClose={() => {
+                      setAppsAppVisible(false)
+                    }}
                   />
                 </div>
               </div>
@@ -277,16 +378,15 @@ const ChartSection: React.FC = () => {
               </div>
               <div className="app-space">
                 <Select 
-                  value={selectedApp}
+                  value={addressSelectedApp}
                   labelInValue={false}
                   defaultValue="All Apps" 
-                  onChange={handleAppChange}
+                  onChange={handleAddressAppChange}
                   dropdownStyle={{ backgroundColor: '#22252E', color: '#FFFCE4'}}
                   popupClassName='app-select'
                   options={[
                     { label: 'All Apps', value: 'all' },
-                    { label: 'UNISWAP', value: 'uniswap' },
-                    { label: 'PANCAKE', value: 'pancake' },
+                    ...appOptions
                   ]}
                 />
                 <div className="date-picker-container">
@@ -297,6 +397,72 @@ const ChartSection: React.FC = () => {
                     showTime={{ format: 'HH'}}
                     popupClassName='brevis-range-picker'
                     renderExtraFooter={() => renderPresetButtons()}
+                  />
+                </div>
+                <div className="mobile-date-picker-container">
+                  <div className="mobile-picker-btn" style={{ marginBottom: "20px" }}>
+                    <div className="mobile-picker-btn-left" onClick={() => {setAddressAppVisible(true)}}>
+                      <div className="start">{addressSelectedAppLable}</div>
+                    </div>
+                    <div className="mobile-picker-btn-right">
+                      <DownOutlined />
+                    </div>
+                  </div>
+
+                  <div className="mobile-picker-btn">
+                    <div className="mobile-picker-btn-left">
+                      <div className="start" onClick={() => {setStartVisible(true)}}>{startDate ? dayjs(startDate).format("MMM DD, YYYY HH") : "Start date"}</div>
+                      <SwapRightOutlined />
+                      <div className="end" onClick={() => {setEndVisible(true)}}>{endDate ? dayjs(endDate).format("MMM DD, YYYY HH") : "End date"}</div>
+                    </div>
+                    <div className="mobile-picker-btn-right">
+                      <CalendarOutlined />
+                    </div>
+                  </div>
+                  <MobileDatePicker
+                    title=''
+                    visible={startVisible}
+                    onClose={() => {
+                      setStartVisible(false)
+                    }}
+                    max={now}
+                    defaultValue={now}
+                    confirmText="OK"
+                    cancelText=""
+                    onConfirm={handleStartConfirm}
+                    precision="hour"
+                  />
+                  <MobileDatePicker
+                    title=''
+                    visible={endVisible}
+                    onClose={() => {
+                      setEndVisible(false)
+                    }}
+                    max={now}
+                    defaultValue={now}
+                    confirmText="OK"
+                    cancelText=""
+                    onConfirm={handleEndConfirm}
+                    precision="hour"
+                  />
+                  {/* <Picker
+                    value={addressSelectedAppValue}
+                    columns={appColumns}
+                    visible={appVisible}
+                    onClose={() => {
+                      setAppVisible(false)
+                    }}
+                    confirmText="OK"
+                    cancelText=""
+                    onConfirm={handleMAddressAppChange}
+                  /> */}
+                  <AppPicker
+                    visible={addressAppVisible}
+                    options={appColumns}
+                    onConfirm={handleMAddressAppConfirm}
+                    onClose={() => {
+                      setAddressAppVisible(false)
+                    }}
                   />
                 </div>
               </div>
