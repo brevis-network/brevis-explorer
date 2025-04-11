@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Row, Col, Select, DatePicker, Button } from 'antd';
-import { DatePicker as MobileDatePicker } from "antd-mobile";
+import MobileDatePicker from "./common/mobileDatePicker";
 import { chartsData } from '../mockData';
 import './ChartSection.css';
 import dayjs, { Dayjs } from 'dayjs';
 import { getWidth } from '../util';
 import Bar from './Bar';
 import { CalendarOutlined, DownOutlined, SwapRightOutlined } from '@ant-design/icons';
-import { GetAppInfosRequest } from '../proto/statistics_pb';
-import { getAppInfos } from '../store/grpc_client';
+import { GetAppDataRequest, GetAppInfosRequest } from '../proto/statistics_pb';
+import { getAppInfos, getProofsNum } from '../store/grpc_client';
 import AppPicker from './common/appPicker';
 
 const { RangePicker } = DatePicker;
@@ -22,11 +22,26 @@ interface PresetItem {
 const ChartSection: React.FC = () => {
   const now = new Date();
 
-  const [proofSelectedApp, setProofSelectedApp] = useState<string>('All Apps');
-  const [appSelectedApp, setAppSelectedApp] = useState<string>('All Apps');
-  const [addressSelectedApp, setAddressSelectedApp] = useState<string>('All Apps');
+  const [proofNum, setProofNum] = useState<number>(0);
+  const [proofChartDate, setProofChartDate] = useState<string[]>([]);
+  const [proofChartValue, setProofChartValue] = useState<number[]>([]);
+  const [proofDateRange, setProofDateRange] = useState<[Dayjs, Dayjs] | null>(null);
 
-  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs] | null>(null);
+  const [appsNum, setAppsNum] = useState<number>(0);
+  const [appsChartDate, setAppsChartDate] = useState<string[]>([]);
+  const [appsChartValue, setAppsChartValue] = useState<number[]>([]);
+  const [appsDateRange, setAppsDateRange] = useState<[Dayjs, Dayjs] | null>(null);
+
+  const [addressNum, setAddressNum] = useState<number>(0);
+  const [addressChartDate, setAddressChartDate] = useState<string[]>([]);
+  const [addressChartValue, setAddressChartValue] = useState<number[]>([]);
+  const [addressDateRange, setAddressDateRange] = useState<[Dayjs, Dayjs] | null>(null);
+
+  const [proofSelectedApp, setProofSelectedApp] = useState<string>('all');
+  const [appSelectedApp, setAppSelectedApp] = useState<string>('all');
+  const [addressSelectedApp, setAddressSelectedApp] = useState<string>('all');
+
+  // const [dateRange, setDateRange] = useState<[Dayjs, Dayjs] | null>(null);
   const [activePreset, setActivePreset] = useState<string | null>(null);
 
   // for mobile date picker
@@ -52,7 +67,6 @@ const ChartSection: React.FC = () => {
   const [appOptions, setAppOptions] = useState<{ label: React.ReactNode; value: string }[]>([]);
   const [appColumns, setAppColumns] = useState<{ label: React.ReactNode; value: string }[][]>([]);
 
-
   useEffect(() => {
     const req = new GetAppInfosRequest();
     getAppInfos(req).then((res) => {
@@ -76,9 +90,48 @@ const ChartSection: React.FC = () => {
     })
   }, []);
 
+  useEffect(() => {
+    if (!proofSelectedApp || !proofDateRange) {
+      return;
+    }
+    let req = new GetAppDataRequest();
+    console.log("proofSelectedApp:", proofSelectedApp);
+    console.log("proofDateRange:", proofDateRange[0].valueOf(), proofDateRange[1].valueOf());
+    req.addAppNames(proofSelectedApp);
+    // const start = Math.floor(proofDateRange[0].valueOf() / 1000);
+    // const end = Math.floor(proofDateRange[1].valueOf() / 1000);
+    // req.setStartTime(start);
+    // req.setEndTime(end);
+    getProofsNum(req).then((res) => {
+      if(res) {
+        const { dailyStatisticList } = res.toObject();
+        console.log("kkkk:", dailyStatisticList);
+        let proofNum = 0;
+        let proofChartDate: string[] = [];
+        let proofChartValue: number[] = [];
+        dailyStatisticList.forEach((item) => {
+          proofNum += item.num;
+          proofChartValue.push(item.num);
+          proofChartDate.push(dayjs(item.date).format("MMM DD"));
+        })
+        setProofNum(proofNum);
+        setProofChartDate(proofChartDate);
+        setProofChartValue(proofChartValue);
+      }
+    })
+  }, [proofSelectedApp, proofDateRange]);
+
   const handleStartConfirm = (value: Date) => {
     setStartDate(value);
     setStartVisible(false);
+    
+    // Update dateRange with new start date
+    if (proofDateRange) {
+      setProofDateRange([dayjs(value), proofDateRange[1]]);
+    } else {
+      setProofDateRange([dayjs(value), dayjs()]);
+    }
+    
     setTimeout(() => setEndVisible(true), 300);
   };
 
@@ -94,8 +147,8 @@ const ChartSection: React.FC = () => {
     setAppsAppVisible(false);
   };
 
-  const handleMAddressAppConfirm = (value: any, lable: any) => {
-    setAddressSelectedAppLable(lable);
+  const handleMAddressAppConfirm = (value: any, label: any) => {
+    setAddressSelectedAppLable(label);
     setAddressSelectedAppValue(value);
     setAddressAppVisible(false);
   };
@@ -103,6 +156,16 @@ const ChartSection: React.FC = () => {
   const handleEndConfirm = (value: Date) => {
     setEndDate(value);
     setEndVisible(false);
+    
+    // Update dateRange with new end date
+    if (proofDateRange) {
+      setProofDateRange([proofDateRange[0], dayjs(value)]);
+    } else {
+      setProofDateRange([dayjs(startDate), dayjs(value)]);
+    }
+    
+    // Reset active preset since we've manually selected dates
+    setActivePreset(null);
   };
 
 
@@ -116,8 +179,9 @@ const ChartSection: React.FC = () => {
     };
   }, []);
 
-  const handleProofAppChange = (value: string) => {
-    setProofSelectedApp(value);
+  const handleProofAppChange = (v: any) => {
+    console.log("handleProofAppChange value:", v);
+    setProofSelectedApp(v.value);
   };
   const handleAppsAppChange = (value: string) => {
     setAppSelectedApp(value);
@@ -126,9 +190,19 @@ const ChartSection: React.FC = () => {
     setAddressSelectedApp(value);
   };
 
-  const handleDateChange = (dates: any) => {
-    setDateRange(dates);
-    setActivePreset(null); 
+  const handleProofDateChange = (dates: any) => {
+    setProofDateRange(dates);
+    setActivePreset(null);
+  }
+
+  const handleAppsDateChange = (dates: any) => {
+    setAppsDateRange(dates);
+    setActivePreset(null);
+  }
+
+  const handleAddressDateChange = (dates: any) => {
+    setAddressDateRange(dates);
+    setActivePreset(null);
   }
   
 
@@ -168,7 +242,7 @@ const ChartSection: React.FC = () => {
             key={preset.key}
             className={`preset-btn ${activePreset === preset.key ? 'active' : ''}`}
             onClick={() => {
-              setDateRange(preset.value);
+              setProofDateRange(preset.value);
               handlePresetClick(preset.key, preset.value);
             }}
           >
@@ -186,7 +260,7 @@ const ChartSection: React.FC = () => {
           <Card className="chart-card">
             <div className="chart-title">
               <div className="chart-title-des">
-                <div>Number of Proofs Generated: <span className="chart-count">{chartsData.proofsGenerated.count.toLocaleString()}</span></div>
+                <div>Number of Proofs Generated: <span className="chart-count">{proofNum.toLocaleString()}</span></div>
               </div>
               <div className="app-space">
                 <Select 
@@ -203,8 +277,8 @@ const ChartSection: React.FC = () => {
                 />
                 <div className="date-picker-container">
                   <RangePicker 
-                    value={dateRange}
-                    onChange={handleDateChange}
+                    value={proofDateRange}
+                    onChange={handleProofDateChange}
                     format="MMM DD, YYYY HH"
                     showTime={{ format: 'HH'}}
                     popupClassName='brevis-range-picker'
@@ -232,26 +306,26 @@ const ChartSection: React.FC = () => {
                     </div>
                   </div>
                   <MobileDatePicker
-                    title=''
+                    title='Select Start Date'
                     visible={startVisible}
                     onClose={() => {
                       setStartVisible(false)
                     }}
                     max={now}
-                    defaultValue={now}
+                    defaultValue={startDate}
                     confirmText="OK"
                     cancelText=""
                     onConfirm={handleStartConfirm}
                     precision="hour"
                   />
                   <MobileDatePicker
-                    title=''
+                    title='Select End Date'
                     visible={endVisible}
                     onClose={() => {
                       setEndVisible(false)
                     }}
                     max={now}
-                    defaultValue={now}
+                    defaultValue={endDate}
                     confirmText="OK"
                     cancelText=""
                     onConfirm={handleEndConfirm}
@@ -271,8 +345,8 @@ const ChartSection: React.FC = () => {
             <Bar
               id={"1"}
               seriesName="Number"
-              series={chartsData.proofsGenerated.data}
-              xAxis={chartsData.proofsGenerated.xAxis}
+              series={proofChartValue}
+              xAxis={proofChartDate}
             />
           </Card>
         </Col>
@@ -297,8 +371,8 @@ const ChartSection: React.FC = () => {
                 />
                 <div className="date-picker-container">
                   <RangePicker 
-                    value={dateRange}
-                    onChange={handleDateChange}
+                    value={appsDateRange}
+                    onChange={handleAppsDateChange}
                     format="MMM DD, YYYY HH"
                     showTime={{ format: 'HH'}}
                     popupClassName='brevis-range-picker'
@@ -326,26 +400,26 @@ const ChartSection: React.FC = () => {
                     </div>
                   </div>
                   <MobileDatePicker
-                    title=''
+                    title='Select Start Date'
                     visible={startVisible}
                     onClose={() => {
                       setStartVisible(false)
                     }}
                     max={now}
-                    defaultValue={now}
+                    defaultValue={startDate}
                     confirmText="OK"
                     cancelText=""
                     onConfirm={handleStartConfirm}
                     precision="hour"
                   />
                   <MobileDatePicker
-                    title=''
+                    title='Select End Date'
                     visible={endVisible}
                     onClose={() => {
                       setEndVisible(false)
                     }}
                     max={now}
-                    defaultValue={now}
+                    defaultValue={endDate}
                     confirmText="OK"
                     cancelText=""
                     onConfirm={handleEndConfirm}
@@ -391,8 +465,8 @@ const ChartSection: React.FC = () => {
                 />
                 <div className="date-picker-container">
                   <RangePicker 
-                    value={dateRange}
-                    onChange={handleDateChange}
+                    value={addressDateRange}
+                    onChange={handleAddressDateChange}
                     format="MMM DD, YYYY HH"
                     showTime={{ format: 'HH'}}
                     popupClassName='brevis-range-picker'
@@ -420,42 +494,31 @@ const ChartSection: React.FC = () => {
                     </div>
                   </div>
                   <MobileDatePicker
-                    title=''
+                    title='Select Start Date'
                     visible={startVisible}
                     onClose={() => {
                       setStartVisible(false)
                     }}
                     max={now}
-                    defaultValue={now}
+                    defaultValue={startDate}
                     confirmText="OK"
                     cancelText=""
                     onConfirm={handleStartConfirm}
                     precision="hour"
                   />
                   <MobileDatePicker
-                    title=''
+                    title='Select End Date'
                     visible={endVisible}
                     onClose={() => {
                       setEndVisible(false)
                     }}
                     max={now}
-                    defaultValue={now}
+                    defaultValue={endDate}
                     confirmText="OK"
                     cancelText=""
                     onConfirm={handleEndConfirm}
                     precision="hour"
                   />
-                  {/* <Picker
-                    value={addressSelectedAppValue}
-                    columns={appColumns}
-                    visible={appVisible}
-                    onClose={() => {
-                      setAppVisible(false)
-                    }}
-                    confirmText="OK"
-                    cancelText=""
-                    onConfirm={handleMAddressAppChange}
-                  /> */}
                   <AppPicker
                     visible={addressAppVisible}
                     options={appColumns}

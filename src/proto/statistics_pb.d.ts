@@ -177,3 +177,138 @@ export namespace GetAppRequestNumByAppNameResponse {
   }
 }
 
+export class UserAddress extends jspb.Message {
+  getAppVkHash(): string;
+  setAppVkHash(value: string): UserAddress;
+
+  getAddress(): string;
+  setAddress(value: string): UserAddress;
+
+  getEoa(): boolean;
+  setEoa(value: boolean): UserAddress;
+
+  getProofTime(): number;
+  setProofTime(value: number): UserAddress;
+
+  getEoaCase(): UserAddress.EoaCase;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): UserAddress.AsObject;
+  static toObject(includeInstance: boolean, msg: UserAddress): UserAddress.AsObject;
+  static serializeBinaryToWriter(message: UserAddress, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): UserAddress;
+  static deserializeBinaryFromReader(message: UserAddress, reader: jspb.BinaryReader): UserAddress;
+}
+
+export namespace UserAddress {
+  export type AsObject = {
+    appVkHash: string,
+    address: string,
+    eoa: boolean,
+    proofTime: number,
+  }
+
+  export enum EoaCase { 
+    _EOA_NOT_SET = 0,
+    EOA = 3,
+  }
+}
+
+export class AddProofUserRequest extends jspb.Message {
+  getUserAddressesList(): Array<UserAddress>;
+  setUserAddressesList(value: Array<UserAddress>): AddProofUserRequest;
+  clearUserAddressesList(): AddProofUserRequest;
+  addUserAddresses(value?: UserAddress, index?: number): UserAddress;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): AddProofUserRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: AddProofUserRequest): AddProofUserRequest.AsObject;
+  static serializeBinaryToWriter(message: AddProofUserRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): AddProofUserRequest;
+  static deserializeBinaryFromReader(message: AddProofUserRequest, reader: jspb.BinaryReader): AddProofUserRequest;
+}
+
+export namespace AddProofUserRequest {
+  export type AsObject = {
+    userAddressesList: Array<UserAddress.AsObject>,
+  }
+}
+
+export class AddProofUserResponse extends jspb.Message {
+  getErr(): common_pb.ErrorMsg | undefined;
+  setErr(value?: common_pb.ErrorMsg): AddProofUserResponse;
+  hasErr(): boolean;
+  clearErr(): AddProofUserResponse;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): AddProofUserResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: AddProofUserResponse): AddProofUserResponse.AsObject;
+  static serializeBinaryToWriter(message: AddProofUserResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): AddProofUserResponse;
+  static deserializeBinaryFromReader(message: AddProofUserResponse, reader: jspb.BinaryReader): AddProofUserResponse;
+}
+
+export namespace AddProofUserResponse {
+  export type AsObject = {
+    err?: common_pb.ErrorMsg.AsObject,
+  }
+}
+
+export class GetUniqAddressRequest extends jspb.Message {
+  getAppNamesList(): Array<string>;
+  setAppNamesList(value: Array<string>): GetUniqAddressRequest;
+  clearAppNamesList(): GetUniqAddressRequest;
+  addAppNames(value: string, index?: number): GetUniqAddressRequest;
+
+  getStartTime(): number;
+  setStartTime(value: number): GetUniqAddressRequest;
+
+  getEndTime(): number;
+  setEndTime(value: number): GetUniqAddressRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): GetUniqAddressRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: GetUniqAddressRequest): GetUniqAddressRequest.AsObject;
+  static serializeBinaryToWriter(message: GetUniqAddressRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): GetUniqAddressRequest;
+  static deserializeBinaryFromReader(message: GetUniqAddressRequest, reader: jspb.BinaryReader): GetUniqAddressRequest;
+}
+
+export namespace GetUniqAddressRequest {
+  export type AsObject = {
+    appNamesList: Array<string>,
+    startTime: number,
+    endTime: number,
+  }
+}
+
+export class GetUniqAddressResponse extends jspb.Message {
+  getErr(): common_pb.ErrorMsg | undefined;
+  setErr(value?: common_pb.ErrorMsg): GetUniqAddressResponse;
+  hasErr(): boolean;
+  clearErr(): GetUniqAddressResponse;
+
+  getDailyStatisticList(): Array<DailyStatistic>;
+  setDailyStatisticList(value: Array<DailyStatistic>): GetUniqAddressResponse;
+  clearDailyStatisticList(): GetUniqAddressResponse;
+  addDailyStatistic(value?: DailyStatistic, index?: number): DailyStatistic;
+
+  getType(): string;
+  setType(value: string): GetUniqAddressResponse;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): GetUniqAddressResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: GetUniqAddressResponse): GetUniqAddressResponse.AsObject;
+  static serializeBinaryToWriter(message: GetUniqAddressResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): GetUniqAddressResponse;
+  static deserializeBinaryFromReader(message: GetUniqAddressResponse, reader: jspb.BinaryReader): GetUniqAddressResponse;
+}
+
+export namespace GetUniqAddressResponse {
+  export type AsObject = {
+    err?: common_pb.ErrorMsg.AsObject,
+    dailyStatisticList: Array<DailyStatistic.AsObject>,
+    type: string,
+  }
+}
+

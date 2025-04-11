@@ -1,0 +1,25 @@
+.adm-picker {
+  --background-color: #22252E;
+  --title-color: rgba(255, 252, 228, 0.9);
+  --item-color: rgba(255, 252, 228, 0.9);
+  --item-active-color: #FFFCE4;
+  --item-disabled-color: rgba(255, 252, 228, 0.3);
+  --header-button-color: #FFFCE4;
+  --header-button-disabled-color: rgba(255, 252, 228, 0.3);
+}
+
+.adm-picker-header {
+  border-bottom: 1px solid rgba(255, 252, 228, 0.1);
+}
+
+.adm-picker-view {
+  background-color: #22252E;
+}
+
+.adm-picker-view-column-item {
+  font-size: 14px;
+}
+
+.adm-picker-view-column-item-active {
+  font-weight: 700;
+}

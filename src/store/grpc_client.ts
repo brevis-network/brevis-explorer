@@ -16,3 +16,19 @@ export const getAppInfos = (
       "Access-Control-Allow-Origin": "*",
     });
   };
+
+export const getProofsNum = (   
+    reqParams: GetAppDataRequest
+): Promise<GetAppDataResponse> => {
+  return client.getProofsNumByAppName(reqParams, {
+    "Access-Control-Allow-Origin": "*",
+  });
+};
+
+export const getAppRequestNum = (   
+    reqParams: GetAppDataRequest
+): Promise<GetAppDataResponse> => {
+  return client.getAppRequestNumByAppName(reqParams, {
+    "Access-Control-Allow-Origin": "*",
+  });
+};

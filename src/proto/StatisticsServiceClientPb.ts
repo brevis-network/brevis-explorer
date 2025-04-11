@@ -164,5 +164,91 @@ export class BrevisExplorerClient {
     this.methodInfoGetAppRequestNumByAppName);
   }
 
+  methodInfoAddProofUser = new grpcWeb.MethodDescriptor(
+    '/zk.master.BrevisExplorer/AddProofUser',
+    grpcWeb.MethodType.UNARY,
+    statistics_pb.AddProofUserRequest,
+    statistics_pb.AddProofUserResponse,
+    (request: statistics_pb.AddProofUserRequest) => {
+      return request.serializeBinary();
+    },
+    statistics_pb.AddProofUserResponse.deserializeBinary
+  );
+
+  addProofUser(
+    request: statistics_pb.AddProofUserRequest,
+    metadata: grpcWeb.Metadata | null): Promise<statistics_pb.AddProofUserResponse>;
+
+  addProofUser(
+    request: statistics_pb.AddProofUserRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: statistics_pb.AddProofUserResponse) => void): grpcWeb.ClientReadableStream<statistics_pb.AddProofUserResponse>;
+
+  addProofUser(
+    request: statistics_pb.AddProofUserRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: statistics_pb.AddProofUserResponse) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/zk.master.BrevisExplorer/AddProofUser',
+        request,
+        metadata || {},
+        this.methodInfoAddProofUser,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/zk.master.BrevisExplorer/AddProofUser',
+    request,
+    metadata || {},
+    this.methodInfoAddProofUser);
+  }
+
+  methodInfoGetUniqAddress = new grpcWeb.MethodDescriptor(
+    '/zk.master.BrevisExplorer/GetUniqAddress',
+    grpcWeb.MethodType.UNARY,
+    statistics_pb.GetUniqAddressRequest,
+    statistics_pb.GetAppDataResponse,
+    (request: statistics_pb.GetUniqAddressRequest) => {
+      return request.serializeBinary();
+    },
+    statistics_pb.GetAppDataResponse.deserializeBinary
+  );
+
+  getUniqAddress(
+    request: statistics_pb.GetUniqAddressRequest,
+    metadata: grpcWeb.Metadata | null): Promise<statistics_pb.GetAppDataResponse>;
+
+  getUniqAddress(
+    request: statistics_pb.GetUniqAddressRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: statistics_pb.GetAppDataResponse) => void): grpcWeb.ClientReadableStream<statistics_pb.GetAppDataResponse>;
+
+  getUniqAddress(
+    request: statistics_pb.GetUniqAddressRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: statistics_pb.GetAppDataResponse) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/zk.master.BrevisExplorer/GetUniqAddress',
+        request,
+        metadata || {},
+        this.methodInfoGetUniqAddress,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/zk.master.BrevisExplorer/GetUniqAddress',
+    request,
+    metadata || {},
+    this.methodInfoGetUniqAddress);
+  }
+
 }
 
